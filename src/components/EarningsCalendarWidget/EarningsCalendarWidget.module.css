@@ -1,0 +1,30 @@
+.widget {
+  display: grid;
+  grid-template-rows: repeat(2, auto);
+  gap: 4px;
+  background-color: #ddb785;
+  padding: 8px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.headerRow {
+  display: flex;
+  gap: 8px;
+}
+
+.headerRow h2,
+.headerRow h3 {
+  margin: 0;
+}
+
+.headerRHS {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  align-items: center;
+}
+
+.headerRHS h3 {
+  text-align: center;
+}
