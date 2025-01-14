@@ -103,7 +103,7 @@ const EarningsCalendarWidget = ({ customStyle = {} }) => {
         ],
       },
     ],
-    customStyle
+    [customStyle]
   );
 
   if (error) return <p>{error}</p>;
