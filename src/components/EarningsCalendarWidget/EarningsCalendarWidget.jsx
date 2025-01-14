@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import Loader from "../Loader/Loader";
 import EarningsGrid from "../EarningsGrid/EarningsGrid";
 import { fetchLastQuarterEarnings, fetchLogos } from "../../utils/api";
 import styles from "./EarningsCalendarWidget.module.css";
@@ -69,23 +70,60 @@ const EarningsCalendarWidget = ({ customStyle = {} }) => {
     loadEarningsData();
   }, []);
 
-  if (loading) return <p>Loading...</p>;
+  const loaderConfig = useMemo(
+    () => [
+      {
+        type: "container",
+        style: {
+          display: "grid",
+          gridTemplateRows: "100px auto",
+          gap: 4,
+          backgroundColor: "#ddb785",
+          padding: 8,
+          boxSizing: "border-box",
+          overflow: "hidden",
+          ...customStyle,
+        },
+        childrens: [
+          { shape: "rect", style: { width: "100%", height: "100%" } },
+          ,
+          {
+            type: "container",
+            style: {
+              display: "grid",
+              gridTemplateColumns: "repeat(5, minmax(140px, 1fr))",
+              gridAutoFlow: "column",
+              gap: 4,
+              overflow: "auto",
+            },
+            childrens: Array(5).fill({
+              shape: "rect",
+            }),
+          },
+        ],
+      },
+    ],
+    customStyle
+  );
+
   if (error) return <p>{error}</p>;
 
   return (
-    <div className={styles.widget} style={{ ...customStyle }}>
-      <div className={styles.headerRow}>
-        <h2>
-          Earnings<br></br>Calendar
-        </h2>
-        <div className={styles.headerRHS}>
-          <h3>
-            Most Anticipated Earnings Releases<br></br>In the last Quarter
-          </h3>
+    <Loader config={loaderConfig} isLoading={loading}>
+      <div className={styles.widget} style={{ ...customStyle }}>
+        <div className={styles.headerRow}>
+          <h2>
+            Earnings<br></br>Calendar
+          </h2>
+          <div className={styles.headerRHS}>
+            <h3>
+              Most Anticipated Earnings Releases<br></br>In the last Quarter
+            </h3>
+          </div>
         </div>
+        <EarningsGrid data={earningsData} />
       </div>
-      <EarningsGrid data={earningsData} />
-    </div>
+    </Loader>
   );
 };
 

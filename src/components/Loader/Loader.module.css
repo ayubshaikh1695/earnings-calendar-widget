@@ -1,0 +1,28 @@
+.loaderContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeletonCircle,
+.skeletonRect {
+  background: linear-gradient(-90deg, #e0e0e0 0%, #f0f0f0 50%, #e0e0e0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.skeletonCircle {
+  border-radius: 50%;
+}
+
+.skeletonRect {
+  border-radius: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
