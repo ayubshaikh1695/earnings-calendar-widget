@@ -2,10 +2,10 @@ import React from "react";
 import styles from "./Loader.module.css";
 
 interface SkeletonItem {
-  type?: "container";
-  shape?: "circle" | "rect";
+  type?: string;
+  shape?: string;
   style?: React.CSSProperties;
-  childrens?: SkeletonItem[];
+  childrens?: (SkeletonItem | undefined)[];
 }
 
 interface LoaderProps {
@@ -17,7 +17,7 @@ interface LoaderProps {
 const Loader: React.FC<LoaderProps> = ({ config, isLoading, children }) => {
   if (!isLoading) return children;
 
-  const renderSkeletonItem = (item: SkeletonItem) => {
+  const renderSkeletonItem = (item: SkeletonItem | undefined) => {
     if (item?.type === "container") {
       return (
         <div style={item.style}>

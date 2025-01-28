@@ -105,7 +105,7 @@ const EarningsCalendarWidget: React.FC<EarningsCalendarWidgetProps> = ({
           gap: 4,
           backgroundColor: "#ddb785",
           padding: 8,
-          boxSizing: "border-box",
+          boxSizing: "border-box" as const,
           overflow: "hidden",
           ...widgetStyle,
         },
