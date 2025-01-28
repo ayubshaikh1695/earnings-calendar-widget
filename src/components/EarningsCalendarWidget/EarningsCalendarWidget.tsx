@@ -41,8 +41,14 @@ const EarningsCalendarWidget: React.FC<EarningsCalendarWidgetProps> = ({
         setLoading(true);
         const { earnings } = await fetchLastQuarterEarnings();
 
+        // Remove duplicate entries based on ticker
+        const uniqueEarnings = earnings.filter(
+          (earning, index, self) =>
+            index === self.findIndex((e) => e.ticker === earning.ticker)
+        );
+
         // Group earnings by day of the week into "Before Open" and "After Close"
-        const groupedEarnings = earnings.reduce(
+        const groupedEarnings = uniqueEarnings.reduce(
           (acc: GroupedEarnings, item) => {
             const day = new Date(item.date).toLocaleDateString("en-US", {
               weekday: "long",
@@ -132,8 +138,6 @@ const EarningsCalendarWidget: React.FC<EarningsCalendarWidgetProps> = ({
   );
 
   if (error) return <p>{error}</p>;
-
-  console.log("earningsData---->", earningsData);
 
   return (
     <Loader config={loaderConfig} isLoading={loading}>
