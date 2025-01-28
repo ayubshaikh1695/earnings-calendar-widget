@@ -1,14 +1,27 @@
 import React from "react";
 import styles from "./Loader.module.css";
 
-const Loader = ({ config, isLoading, children }) => {
+interface SkeletonItem {
+  type?: "container";
+  shape?: "circle" | "rect";
+  style?: React.CSSProperties;
+  childrens?: SkeletonItem[];
+}
+
+interface LoaderProps {
+  config: SkeletonItem[];
+  isLoading: boolean;
+  children: React.ReactNode;
+}
+
+const Loader: React.FC<LoaderProps> = ({ config, isLoading, children }) => {
   if (!isLoading) return children;
 
-  const renderSkeletonItem = (item) => {
+  const renderSkeletonItem = (item: SkeletonItem) => {
     if (item?.type === "container") {
       return (
         <div style={item.style}>
-          {item.childrens.map((child, index) => (
+          {item.childrens?.map((child, index) => (
             <React.Fragment key={index}>
               {renderSkeletonItem(child)}
             </React.Fragment>

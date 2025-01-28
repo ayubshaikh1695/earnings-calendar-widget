@@ -1,60 +1,85 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import Loader from "../Loader/Loader";
 import EarningsGrid from "../EarningsGrid/EarningsGrid";
 import { fetchLastQuarterEarnings, fetchLogos } from "../../utils/api";
+import { MARKET_CLOSE_TIME, MARKET_OPEN_TIME } from "../../utils/constants";
+import { AfterClose, BeforeOpen, Earning } from "../../utils/types";
 import styles from "./EarningsCalendarWidget.module.css";
 
-const EarningsCalendarWidget = ({ customStyle = {} }) => {
-  const [earningsData, setEarningsData] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+interface GroupedEarnings {
+  [day: string]: {
+    "Before Open": Earning[];
+    "After Close": Earning[];
+  };
+}
+
+interface EarningsCalendarWidgetProps {
+  customStyle?: React.CSSProperties;
+}
+
+const EarningsCalendarWidget: React.FC<EarningsCalendarWidgetProps> = ({
+  customStyle = {},
+}) => {
+  const [searchParams] = useSearchParams();
+
+  const widgetStyle = {
+    ...customStyle,
+    width:
+      parseInt(searchParams.get("width") || "") || customStyle.width || 800,
+    height:
+      parseInt(searchParams.get("height") || "") || customStyle.height || 600,
+  };
+
+  const [earningsData, setEarningsData] = useState<GroupedEarnings>({});
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadEarningsData = async () => {
       try {
         setLoading(true);
-        // Fetch earnings data
         const { earnings } = await fetchLastQuarterEarnings();
 
         // Group earnings by day of the week into "Before Open" and "After Close"
-        const groupedEarnings = earnings.reduce((acc, item) => {
-          const day = new Date(item.date).toLocaleDateString("en-US", {
-            weekday: "long",
-          });
+        const groupedEarnings = earnings.reduce(
+          (acc: GroupedEarnings, item) => {
+            const day = new Date(item.date).toLocaleDateString("en-US", {
+              weekday: "long",
+            });
 
-          // Time thresholds in EST
-          const marketOpenTime = "09:30:00";
-          const marketCloseTime = "16:00:00";
+            let timeCategory: BeforeOpen | AfterClose | null = null;
+            if (item.time < MARKET_OPEN_TIME) {
+              timeCategory = "Before Open";
+            } else if (item.time >= MARKET_CLOSE_TIME) {
+              timeCategory = "After Close";
+            }
 
-          let timeCategory = null;
-          if (item.time < marketOpenTime) {
-            timeCategory = "Before Open";
-          } else if (item.time >= marketCloseTime) {
-            timeCategory = "After Close";
-          }
+            if (timeCategory) {
+              if (!acc[day])
+                acc[day] = { "Before Open": [], "After Close": [] };
+              acc[day][timeCategory].push(item);
+            }
 
-          if (timeCategory) {
-            if (!acc[day]) acc[day] = { "Before Open": [], "After Close": [] };
-            acc[day][timeCategory].push(item);
-          }
+            return acc;
+          },
+          {}
+        );
 
-          return acc;
-        }, {});
-
-        // Fetch logos for the tickers
         const tickers = earnings.map((item) => item.ticker);
         const { data: logos } = await fetchLogos(tickers);
 
         // Add logo URLs to grouped earnings
         Object.keys(groupedEarnings).forEach((day) => {
           Object.keys(groupedEarnings[day]).forEach((timeCategory) => {
-            groupedEarnings[day][timeCategory] = groupedEarnings[day][
-              timeCategory
-            ].map((item) => ({
-              ...item,
-              logo: logos.find((logo) => logo.search_key === item.ticker)?.files
-                ?.mark_vector_light,
-            }));
+            groupedEarnings[day][timeCategory as BeforeOpen | AfterClose] =
+              groupedEarnings[day][timeCategory as BeforeOpen | AfterClose].map(
+                (item) => ({
+                  ...item,
+                  logo: logos.find((logo) => logo.search_key === item.ticker)
+                    ?.files?.mark_vector_light,
+                })
+              );
           });
         });
 
@@ -82,7 +107,7 @@ const EarningsCalendarWidget = ({ customStyle = {} }) => {
           padding: 8,
           boxSizing: "border-box",
           overflow: "hidden",
-          ...customStyle,
+          ...widgetStyle,
         },
         childrens: [
           { shape: "rect", style: { width: "100%", height: "100%" } },
@@ -103,14 +128,16 @@ const EarningsCalendarWidget = ({ customStyle = {} }) => {
         ],
       },
     ],
-    [customStyle]
+    [widgetStyle]
   );
 
   if (error) return <p>{error}</p>;
 
+  console.log("earningsData---->", earningsData);
+
   return (
     <Loader config={loaderConfig} isLoading={loading}>
-      <div className={styles.widget} style={{ ...customStyle }}>
+      <div className={styles.widget} style={{ ...widgetStyle }}>
         <div className={styles.headerRow}>
           <h2>
             Earnings<br></br>Calendar
